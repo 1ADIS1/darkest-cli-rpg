@@ -1,4 +1,5 @@
 use std::io;
+use darkest_cli_rpg::{self, game_state::GameState};
 
 fn main() {
 	println!("Welcome to the Darkest RPG! Please, enter your name: ");
@@ -13,4 +14,6 @@ fn main() {
 	player_name = String::from(player_name.trim());
 
 	println!("Hello, {player_name}, good luck in your journey. You will need it...");
+
+	GameState::run();
 }

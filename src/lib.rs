@@ -1,53 +1,41 @@
-#![allow(dead_code, unused_variables)]
-
+use game_state::GameState;
 pub use rand::prelude::*;
-pub use std::collections::{HashMap};
+pub use std::collections::HashMap;
 
 pub mod fight;
 use fight::entities::Entity;
 
-#[derive(Debug)]
-struct Attack {
-    name: String,
-    effects: HashMap<EffectType, u32>,
-    damage: u32,
+pub mod game_state;
+pub mod status_effects;
+
+trait Death {
+    fn die(&mut self);
 }
 
-trait Applicable {
-    fn apply_to(&self, entity: Entity);
+pub struct Player<'a> {
+    pub entity: Entity,
+    game_state: &'a mut GameState,
+
+    // inventory: HashMap<Item, u32>
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord)] // WTF am I deriving?
-pub enum EffectType {
-    Blight,
-    Stun,
-    Bleed,
-    Infection,
-}
+impl<'a> Death for Player<'a> {
 
-impl Applicable for EffectType {
-    fn apply_to(&self, entity: Entity) {
-        // entity.try_apply_effect(self);
-        todo!()
+    fn die(&mut self) {
+        self.game_state.player_dies();
     }
 }
 
-impl Attack {
-    fn use_ability(&self) {
-        todo!()
+pub struct Enemy<'a> {
+    pub entity: Entity,
+    game_state: &'a mut GameState,
+}
+
+impl<'a> Death for Enemy<'a> {
+
+    fn die(&mut self) {
+        self.game_state.enemy_dies();
     }
-}
-
-fn run() {
-    let new_enemy = Entity::random();
-
-    new_enemy.encounter();
-
-    todo!()
-}
-
-fn welcoming_messages() {
-
 }
 
 pub fn try_probability(probability: &u32) -> bool {

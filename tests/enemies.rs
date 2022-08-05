@@ -1,4 +1,13 @@
-use darkest_cli_rpg::{fight::entities::Entity, EffectType, try_probability};
+use darkest_cli_rpg::fight::{attacks::Attack, entities::Entity};
+use crate::status_effects::EffectType;
+use darkest_cli_rpg::*;
+
+fn debug_entity() -> Entity {
+	let new_entity = Entity::random();
+	println!("New entity is {:?}", new_entity);
+
+	return new_entity;
+}
 
 #[test]
 #[ignore]
@@ -44,7 +53,7 @@ fn test_probabilities() {
 
 	let probability_to_test: u32 = 100;
 
-	for i in 0..test_amount {
+	for _ in 0..test_amount {
 		results.push(try_probability(&probability_to_test));
 	}
 
@@ -55,4 +64,47 @@ fn test_probabilities() {
 
 	println!("Number of false is {}", falses);
 	println!("Number of true is {}", test_amount - falses);
+}
+
+#[test]
+fn try_ability_on_enemy() {
+	let mut new_entity = debug_entity();
+
+	new_entity.health = 10;
+
+	let new_bleed_effect = Effect {
+		effect_type: EffectType::Bleed,
+		duration: 3,
+		damage: 4,
+	};
+
+	let mut ability_effects = vec![new_bleed_effect];
+
+	let new_ability = Attack {
+		name: "Feral claws".to_string(),
+		effects: ability_effects,
+		damage: 5,
+	};
+
+	println!("\nTrying to attack entity with {:?}", new_ability);
+
+	new_ability.use_ability(&mut new_entity);
+
+	assert_eq!(new_entity.health, 5);
+}
+
+#[test]
+fn try_debuff() {
+	let new_debuff_effect = DebuffEffect {
+		effect_type: EffectType::Debuff,
+		duration: 2,
+		debuffs: {
+			let new_debuffs = HashMap::new();
+
+			new_debuffs.insert(Status::Damage, 10);
+			new_debuffs.insert(EffectType::Bleed, 25);
+
+			new_debuffs
+		},
+	};
 }

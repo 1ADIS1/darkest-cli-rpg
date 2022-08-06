@@ -1,28 +1,28 @@
 use crate::fight::attacks::Attack;
-use crate::status_effects::{EffectType, TriggerableEffect};
+use crate::status_effects::{StatusEffects, EffectType};
 use crate::{Rng, HashMap, try_probability};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Entity {
-    image: String,
+    pub image: String,
     pub name: String,
 
     pub health: u32,
-    armor: u32,
+    pub armor: u32,
     // dodge: u32,
 
-    effects: Vec<Box<dyn TriggerableEffect>>, // buffs or debuffs
+    pub status_effects: StatusEffects,
 
     pub resistances: HashMap<EffectType, u32>,
 
-    attacks: Vec<Attack>,
+    pub attacks: Vec<Attack>,
 }
 
 impl Entity {
 
     /**
     Get random entity from one of the predefined creatures with random stats
-    TODO: random abilities and effects
+    TODO: random abilities and damageable_effects
     */
     pub fn random() -> Entity {
         let mut rng = rand::thread_rng();
@@ -41,7 +41,7 @@ impl Entity {
             health: rng.gen_range(0..100),
             armor: rng.gen_range(0..100),
 
-            effects: vec![],
+            status_effects: StatusEffects::new(),
 
             resistances,
 
@@ -71,28 +71,50 @@ impl Entity {
     }
 
     /**
-    returns true if effect was applied after trying to resist and false if not
+    In the each round entity will triggers existing damage effects on it
     */
-    pub fn try_apply_effect(&mut self, effect: &Box<dyn TriggerableEffect>) -> bool {        
-        let final_probability = self.calculate_resist(effect.get_type(), effect.get_probability());
+    pub fn trigger_damage_effects(&mut self) {
+        let damageable_effects = self.status_effects.damageable_effects.clone();
 
-        // If probability succeeded -> apply effect
-        if try_probability(&final_probability) {
-            println!("{} got {:?}!\n", self.name, &effect.get_type());
+        for damageable_effect in damageable_effects {
+            self.receive_damage(damageable_effect.damage)
+        }
+    }
 
-            self.effects.push(effect);
-            true
-        } else {
-            println!("{} resisted the {:?}.\n", self.name, &effect.get_type());
+    /**
+    iterates through all of the status effects and tries to resist/apply them
+    */
+    // TODO: refactor the code to not duplicate loops for each type of the effect
+    pub fn try_apply_effects(&mut self, effects: &StatusEffects) {
 
-            false
+        // for every damageable, debuff and passive effects do:
+        let damageable_effects = &effects.damageable_effects;
+        // let debuff_effects
+        // let passive_effects
+
+        for effect in damageable_effects {
+            let final_probability = self.calculate_resist(
+                &effect.default_effect.effect_type, 
+                effect.default_effect.probability
+            );
+
+            // If probability succeeded -> apply effect
+            if try_probability(final_probability) {
+                println!("{} got {:?}!\n", self.name, effect.default_effect.effect_type);
+
+                let effect_to_apply = effect.clone();
+
+                self.status_effects.damageable_effects.push(effect_to_apply);
+            } else {
+                println!("{} resisted the {:?}.\n", self.name, effect.default_effect.effect_type);
+            }
         }
     }
 
     /**
     returns effect's probaility - resist
     */
-    fn calculate_resist(&self, effect_type: &EffectType, effect_probability: &u32) -> u32 {
+    fn calculate_resist(&self, effect_type: &EffectType, effect_probability: u32) -> u32 {
         let entity_resistance = self.resistances.get(effect_type);
 
         let entity_resistance: u32 = match entity_resistance {
@@ -103,10 +125,10 @@ impl Entity {
             },
         };
 
-        if entity_resistance > *effect_probability {
+        if entity_resistance > effect_probability {
             0
         } else {
-            *effect_probability - entity_resistance
+            effect_probability - entity_resistance
         }
     }
 
@@ -118,7 +140,8 @@ impl Entity {
         println!("\nStatus");
         println!("Health: {}", self.health);
         println!("Armor: {}", self.armor);
-        println!("Current effects: {:?}", self.effects);
+        // TODO: Print every effect in one line to not overcomplicate
+        println!("Current effects: {:?}", self.status_effects.damageable_effects);
 
         println!("\nResistances");
         println!("Blight: {}%", self.resistances.get(&EffectType::Blight).unwrap());    

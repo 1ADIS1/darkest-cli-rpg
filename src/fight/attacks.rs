@@ -1,21 +1,22 @@
-use crate::{*, status_effects::TriggerableEffect};
+use crate::{*, status_effects::StatusEffects};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Attack {
     pub name: String,
-    pub effects: Vec<Box<dyn TriggerableEffect>>,
+
+    //Introduce hash map, where type of effect will be key 
+    pub effects: StatusEffects,
     pub damage: u32,
     // accuracy: u32,
     // crit: u32,
 }
 
 impl Attack {
+
     pub fn use_ability(&self, entity_to_attack: &mut Entity)
     {
         entity_to_attack.receive_damage(self.damage);
 
-        for effect in &self.effects {
-            entity_to_attack.try_apply_effect(effect);
-        }
+        entity_to_attack.try_apply_effects(&self.effects);
     }
 }

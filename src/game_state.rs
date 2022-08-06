@@ -32,7 +32,7 @@ impl GameState {
     }
 
     pub fn run() {
-        let new_game_state = GameState::new();
+        // let new_game_state = GameState::new();
 
         todo!()
     }
@@ -72,8 +72,26 @@ impl GameState {
 
         todo!()
     }
+
+    fn trigger_status_effects(&self) {
+        match &self.player {
+            Some(player) => {
+                let mut player = player.clone();
+                player.trigger_damage_effects();
+            },
+            None => println!("trigger_status_effects: Player is already dead!"),
+        };
+
+        match &self.current_enemy {
+            Some(enemy) => {
+                let mut enemy = enemy.clone();
+                enemy.trigger_damage_effects();
+            },
+            None => println!("trigger_status_effects: Player is already dead!"),
+        };
+    }
 }
 
-fn welcoming_messages() {
+// fn welcoming_messages() {
 
-}
+// }

@@ -38,8 +38,8 @@ impl<'a> Death for Enemy<'a> {
     }
 }
 
-pub fn try_probability(probability: &u32) -> bool {
+pub fn try_probability(probability: u32) -> bool {
     let rand_num = thread_rng().gen_range(0..100);
 
-    *probability > rand_num
+    probability > rand_num
 }
